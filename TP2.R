@@ -146,4 +146,6 @@ text(
 ## 15. Retrouver dans quel commune se trouve chaque centroïde
 
 ?st_intersects
+commune_centroid_bret <- st_intersects(carte_bretagne, centroid_dept_bretagne)
 
+commune_centroid_bret <- carte_bretagne[which(lengths(commune_centroid_bret)>0),]

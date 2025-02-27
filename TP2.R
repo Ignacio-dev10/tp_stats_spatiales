@@ -81,3 +81,69 @@ dep_bretagne <- carte_bretagne %>%
   group_by(dep) %>%
   summarise(surface = sum(surf2))
 plot(dep_bretagne)
+
+## 13. Fond départementale
+dep_bretagne2 <- carte_bretagne %>%
+  group_by(dep) %>%
+  summarise(geometry = st_union(geom))
+
+plot(dep_bretagne2)
+
+
+## 14. Création des centroïdes
+
+centroid_dept_bretagne <- st_centroid(dep_bretagne2)
+str(centroid_dept_bretagne)
+class(centroid_dept_bretagne$geometry)
+print(centroid_dept_bretagne)
+
+#a. C'est une géométrie de style POINT
+
+#b. Représentation des centroïdes
+
+plot(st_geometry(dep_bretagne2))
+plot(st_geometry(centroid_dept_bretagne$geometry), add=TRUE)
+
+
+ggplot() +
+  geom_sf(data = dep_bretagne2) +
+  geom_sf(data = centroid_dept_bretagne, color = "dark green", size = .5) +
+  theme_void() +
+  theme(panel.grid = element_blank(), panel.border = element_blank()) +
+  labs(title = "les départements et leur centroïdes")
+
+
+#c. Rajouter le libellé des départements
+
+dep_lib <- as.data.frame(list(c("22","29","35","56"),c("Côtes-d'Armor","Finistère","Ille-et-Vilaine","Morbian")),
+                      col.names = c("dep", "libelle_dep"))
+
+centroid_dept_bretagne <- centroid_dept_bretagne %>%
+  full_join(dep_lib, by = "dep")
+
+
+#d. Récupération des coordonnées
+
+centroid_coords <- as.data.frame(st_coordinates(centroid_dept_bretagne))
+st_drop_geometry(centroid_coords)
+
+centroid_coords <- cbind(cbind(centroid_coords, centroid_dept_bretagne$dep), centroid_dept_bretagne$libelle_dep)
+
+# e. Affichage sur la carte
+
+plot(st_geometry(dep_bretagne2))
+plot(st_geometry(centroid_dept_bretagne$geometry), pch = 16, col = "orangered", add=TRUE)
+text(
+  x = centroid_coords$X,
+  y = centroid_coords$Y,
+  labels = centroid_coords$`centroid_dept_bretagne$libelle_dep`,
+  pos = 3,
+  cex = 0.8,
+  col = "orangered"
+)
+
+
+## 15. Retrouver dans quel commune se trouve chaque centroïde
+
+?st_intersects
+
